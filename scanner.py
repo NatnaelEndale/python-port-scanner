@@ -2,6 +2,7 @@ from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
 import socket
 import errno
+import json
 
 target = "192.168.1.1"
 open_ports = Queue()
@@ -18,21 +19,57 @@ def port_scanner(port):
                 scanner.send(request.encode())
             try:
                 banner = scanner.recv(1024).decode().strip() 
-                print(f"Port {port}, banner {banner}: {banner}")
+                match port:
+                    case 20 | 21:
+                        print(f"Port {port} is open, FTP service detected: {banner}")
+                        open_ports.put({"port": port, "service": "FTP", "banner": banner})
+                    case 22:
+                        print(f"Port {port} is open, SSH service detected: {banner}")
+                        open_ports.put({"port": port, "service": "SSH", "banner": banner})
+                    case 23:
+                        print(f"Port {port} is open, Telnet service detected: {banner}")
+                        open_ports.put({"port": port, "service": "Telnet", "banner": banner})
+                    case 25:
+                        print(f"Port {port} is open, SMTP service detected: {banner}")
+                        open_ports.put({"port": port, "service": "SMTP", "banner": banner})
+                    case 53:
+                        print(f"Port {port} is open, DNS service detected: {banner}")
+                        open_ports.put({"port": port, "service": "DNS", "banner": banner})
+                    case 67 | 68:
+                        print(f"Port {port} is open, DHCP service detected: {banner}")
+                        open_ports.put({"port": port, "service": "DHCP", "banner": banner})
+                    case 80:
+                        print(f"Port {port} is open, HTTP service detected: {banner}")
+                        open_ports.put({"port": port, "service": "HTTP", "banner": banner})
+                    case 110:
+                        print(f"Port {port} is open, POP3 service detected: {banner}")
+                        open_ports.put({"port": port, "service": "POP3", "banner": banner})
+                    case 143:
+                        print(f"Port {port} is open, IMAP service detected: {banner}")
+                        open_ports.put({"port": port, "service": "IMAP", "banner": banner})
+                    case 443:
+                        print(f"Port {port} is open, HTTPS service detected: {banner}")
+                        open_ports.put({"port": port, "service": "HTTPS", "banner": banner})
+                    case 445:
+                        print(f"Port {port} is open, SMB service detected: {banner}")
+                        open_ports.put({"port": port, "service": "SMB", "banner": banner})
+
             except:
-                print(f"Port {port} is open, but no banner was received.")
-            open_ports.put(port)
+                if port == 23:  
+                    print(f"Port {port} is open, Telnet service detected, but no banner was received.")
+                    open_ports.put({"port": port, "service": "Telnet", "banner": None})
+                else:
+                    print(f"Port {port} is open, but no banner was received.")
+                    open_ports.put({"port": port, "service": "Unknown", "banner": None})
         elif result == errno.ECONNREFUSED:
             print(f"Port {port} is closed.")
         elif result == errno.ETIMEDOUT:
             print(f"Port {port} is filetered.")
         elif result == errno.EHOSTUNREACH:
             print(f"Port {port} is host unreachable.")
-        else:
-            print(f"Port {port} is in an unknown state (error code: {result}).")
 
 if __name__ == "__main__":
-    print(f"Scanning {target}...\n")
+    print(f"Scanning {target}...\n") 
 
     with ThreadPoolExecutor(max_workers=10) as executor:
         executor.map(port_scanner, range(1, 1025))
