@@ -1,10 +1,12 @@
-from os import scandir
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
 import socket
 import json
+import argparse
+from json.decoder import JSONDecodeError
+from itertools import repeat
 
-target = "192.168.1.1"
+REPORT_FILE = "report.json"
 open_ports = Queue()
 services = {
     20: "FTP",
@@ -22,7 +24,7 @@ services = {
     445: "SMB"
 }
 
-def port_scanner(port):
+def port_scanner(port, target):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as scanner: 
         
         scanner.settimeout(0.5)
@@ -32,9 +34,12 @@ def port_scanner(port):
             scanner.settimeout(1.5)
             if port == 80:
                 request = "HEAD / HTTP/1.1\r\nHost: {}\r\n\r\n".format(target)
-                scanner.send(request.encode())
+                try:
+                    scanner.send(request.encode())
+                except socket.error:
+                    print(f"Failed to send HTTP request to port {port}.")
             try:
-                banner = scanner.recv(1024).decode().strip() 
+                banner = scanner.recv(1024).decode(errors="ignore").strip() 
                 service = services.get(port, "Unknown")
                 print(f"Port {port} is open, Service: {service}, Banner: {banner}")
                 open_ports.put({"port": port, "service": service, "banner": banner})
@@ -47,23 +52,52 @@ def port_scanner(port):
                     open_ports.put({"port": port, "service": "Unknown", "banner": None})
 
 
-if __name__ == "__main__":
+def see_report():
+    with open(REPORT_FILE, "r") as f:
+        try:
+            report = json.load(f)
+            print(report)
+        except JSONDecodeError:
+            print("Report file is empty or contains invalid JSON.")
+
+
+def scan(target, p_range):
     print(f"Scanning {target}...\n") 
 
     with ThreadPoolExecutor(max_workers=10) as executor:
-        executor.map(port_scanner, range(1, 1025))
-
+        executor.map(port_scanner, range(p_range[0], p_range[1] + 1), repeat(target))
 
     print("\nScanning completed.")
 
-    socan_results = []
+    scan_results = []
 
     while not open_ports.empty():
-        socan_results.append(open_ports.get())
+        scan_results.append(open_ports.get())
 
     with open("report.json", "w") as file:
-        json.dump(socan_results, file, indent=4)
+        json.dump(scan_results, file, indent=3)
     print("Report saved to report.json")
+
+
+
+def main():
+    parser = argparse.ArgumentParser(description="----Port Scanner----")
+    parser.add_argument("commad", choices=["scan", "report"], help="Command to execute: 'scan' to perform a scan, 'report' to view the report.")
+    parser.add_argument("target", help="Target IP address to scan.")
+    parser.add_argument("--range", nargs= 2, type= int, default=[1, 1024], help="Port range to scan (e.g., 1-1024).")
+    args = parser.parse_args()
+
+    if args.commad == "scan":
+        scan(args.target, args.range)
+
+    elif args.commad == "report":
+        see_report()
+
+
+
+if __name__ == "__main__":
+    main()
+   
         
 
    
