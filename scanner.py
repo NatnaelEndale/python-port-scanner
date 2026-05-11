@@ -1,11 +1,26 @@
+from os import scandir
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
 import socket
-import errno
 import json
 
 target = "192.168.1.1"
 open_ports = Queue()
+services = {
+    20: "FTP",
+    21: "FTP",
+    22: "SSH",
+    23: "Telnet",
+    25: "SMTP",
+    53: "DNS",
+    67: "DHCP",
+    68: "DHCP",
+    80: "HTTP",
+    110: "POP3",
+    143: "IMAP",
+    443: "HTTPS",
+    445: "SMB"
+}
 
 def port_scanner(port):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as scanner: 
@@ -14,59 +29,23 @@ def port_scanner(port):
         result = scanner.connect_ex((target, port))
         
         if result == 0:
+            scanner.settimeout(1.5)
             if port == 80:
                 request = "HEAD / HTTP/1.1\r\nHost: {}\r\n\r\n".format(target)
                 scanner.send(request.encode())
             try:
                 banner = scanner.recv(1024).decode().strip() 
-                match port:
-                    case 20 | 21:
-                        print(f"Port {port} is open, FTP service detected: {banner}")
-                        open_ports.put({"port": port, "service": "FTP", "banner": banner})
-                    case 22:
-                        print(f"Port {port} is open, SSH service detected: {banner}")
-                        open_ports.put({"port": port, "service": "SSH", "banner": banner})
-                    case 23:
-                        print(f"Port {port} is open, Telnet service detected: {banner}")
-                        open_ports.put({"port": port, "service": "Telnet", "banner": banner})
-                    case 25:
-                        print(f"Port {port} is open, SMTP service detected: {banner}")
-                        open_ports.put({"port": port, "service": "SMTP", "banner": banner})
-                    case 53:
-                        print(f"Port {port} is open, DNS service detected: {banner}")
-                        open_ports.put({"port": port, "service": "DNS", "banner": banner})
-                    case 67 | 68:
-                        print(f"Port {port} is open, DHCP service detected: {banner}")
-                        open_ports.put({"port": port, "service": "DHCP", "banner": banner})
-                    case 80:
-                        print(f"Port {port} is open, HTTP service detected: {banner}")
-                        open_ports.put({"port": port, "service": "HTTP", "banner": banner})
-                    case 110:
-                        print(f"Port {port} is open, POP3 service detected: {banner}")
-                        open_ports.put({"port": port, "service": "POP3", "banner": banner})
-                    case 143:
-                        print(f"Port {port} is open, IMAP service detected: {banner}")
-                        open_ports.put({"port": port, "service": "IMAP", "banner": banner})
-                    case 443:
-                        print(f"Port {port} is open, HTTPS service detected: {banner}")
-                        open_ports.put({"port": port, "service": "HTTPS", "banner": banner})
-                    case 445:
-                        print(f"Port {port} is open, SMB service detected: {banner}")
-                        open_ports.put({"port": port, "service": "SMB", "banner": banner})
-
-            except:
+                service = services.get(port, "Unknown")
+                print(f"Port {port} is open, Service: {service}, Banner: {banner}")
+                open_ports.put({"port": port, "service": service, "banner": banner})
+            except socket.timeout:
                 if port == 23:  
                     print(f"Port {port} is open, Telnet service detected, but no banner was received.")
                     open_ports.put({"port": port, "service": "Telnet", "banner": None})
                 else:
                     print(f"Port {port} is open, but no banner was received.")
                     open_ports.put({"port": port, "service": "Unknown", "banner": None})
-        elif result == errno.ECONNREFUSED:
-            print(f"Port {port} is closed.")
-        elif result == errno.ETIMEDOUT:
-            print(f"Port {port} is filetered.")
-        elif result == errno.EHOSTUNREACH:
-            print(f"Port {port} is host unreachable.")
+
 
 if __name__ == "__main__":
     print(f"Scanning {target}...\n") 
@@ -74,8 +53,18 @@ if __name__ == "__main__":
     with ThreadPoolExecutor(max_workers=10) as executor:
         executor.map(port_scanner, range(1, 1025))
 
+
     print("\nScanning completed.")
-    print(f"Open ports: {list(open_ports.queue)}")
+
+    socan_results = []
+
+    while not open_ports.empty():
+        socan_results.append(open_ports.get())
+
+    with open("report.json", "w") as file:
+        json.dump(socan_results, file, indent=4)
+    print("Report saved to report.json")
+        
 
    
 
