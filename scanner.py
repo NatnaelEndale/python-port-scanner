@@ -58,7 +58,7 @@ def see_report():
     with open(REPORT_FILE, "r") as f:
         try:
             report = json.load(f)
-            print(report)
+            print(json.dumps(report, indent=3))
         except JSONDecodeError:
             print("Report file is empty or contains invalid JSON.")
 
@@ -88,16 +88,21 @@ def scan(target, p_range):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="----Port Scanner----")
-    parser.add_argument("commad", choices=["scan", "report"], help="Command to execute: 'scan' to perform a scan, 'report' to view the report.")
-    parser.add_argument("target", help="Target IP address to scan.")
-    parser.add_argument("--range", nargs= 2, type= int, default=[1, 1024], help="Port range to scan (e.g., 1-1024).")
+    parser = argparse.ArgumentParser(description="A Port Scanner.")
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    scan_parser = subparsers.add_parser("scan", help="Perform a port scan on the specified target.")
+    scan_parser.add_argument("target", help="Target IP address to scan.")
+    scan_parser.add_argument("--range", nargs=2, type=int, default=[1, 1024], help="Port range to scan (e.g., 1-1024).")
+
+    subparsers.add_parser("report", help="View the scan report.")
+
     args = parser.parse_args()
 
-    if args.commad == "scan":
+    if args.command == "scan":
         scan(args.target, args.range)
 
-    elif args.commad == "report":
+    elif args.command == "report":
         see_report()
 
 
