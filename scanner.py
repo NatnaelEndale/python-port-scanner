@@ -5,6 +5,8 @@ import json
 import argparse
 from json.decoder import JSONDecodeError
 from itertools import repeat
+from typing import final
+from datetime import datetime
 
 REPORT_FILE = "report.json"
 open_ports = Queue()
@@ -73,9 +75,14 @@ def scan(target, p_range):
 
     while not open_ports.empty():
         scan_results.append(open_ports.get())
+    final_report = {
+            "target": target,
+            "scan_time": datetime.now().isoformat(),
+            "results": scan_results
+            }
 
     with open("report.json", "w") as file:
-        json.dump(scan_results, file, indent=3)
+        json.dump(final_report, file, indent=3)
     print("Report saved to report.json")
 
 
