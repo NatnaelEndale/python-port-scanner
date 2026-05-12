@@ -70,7 +70,7 @@ report.json
 Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/python-port-scanner.git
+git clone https://github.com/NatnaelEndale/python-port-scanner.git
 cd python-port-scanner
 ```
 
@@ -210,7 +210,7 @@ Do not scan systems you do not own or have permission to test.
 
 # Author
 
-Natnael (Natty)
+Natnael Endale 
 
 Passionate about cybersecurity, networking, and secure systems engineering.
 
