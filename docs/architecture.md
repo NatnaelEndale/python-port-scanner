@@ -4,26 +4,26 @@ attempting to identify open ports and gather service banners.
 
 ## The Scanner simply does this
 User CLI Input<\br>
-       │<\br>
-       ▼<\br>
+       │<br>
+       ▼<br>
 Argument Parsing (argparse)<\br>
-       │<\br>
-       ▼<\br>
+       │<br>
+       ▼<br>
 Validation Layer<\br>
-       │<\br>
-       ▼<\br>
+       │<br>
+       ▼<br>
 ThreadPoolExecutor<\br>
-       │<\br>
-       ▼<\br>
+       │<br>
+       ▼<br>
 Port Scanner Workers<\br>
-       │<\br>
-       ▼<\br>
+       │<br>
+       ▼<br>
 Banner Grabbing & Service Detection<\br>
-       │<\br>
-       ▼<\br>
+       │<br>
+       ▼<br>
 Queue Collection<\br>
-       │<\br>
-       ▼<\br>
+       │<br>
+       ▼<br>
 JSON Report Generation
 
 ## CLI Layer 
@@ -90,9 +90,10 @@ try:
 except socket.error:
     print(f"Failed to connect to port {port}.")
     return
-    ```
+```
 
 3. **Identify open ports**: If the connection is successful (result == 0), the port is identified as open, and the scanner proceeds to gather service banners.
+
 ```python
 if result == 0:
     scanner.settimeout(timeout)
@@ -119,7 +120,8 @@ except socket.timeout:
         open_ports.put({"port": port, "service": "Telnet", "banner": None})
     else:
         print(f"{port:<8}{'Unknown':<10}{'Open':<10}{'No banner was received'}")
-        open_ports.put({"port": port, "service": "Unknown", "banner": None})```
+        open_ports.put({"port": port, "service": "Unknown", "banner": None})
+```
 
 6. **Store results**: The results from each worker thread are stored in a queue, which is later used to generate a JSON report summarizing the scan results.
 
