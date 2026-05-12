@@ -3,9 +3,9 @@ from concurrent.futures import ThreadPoolExecutor
 import socket
 import json
 import argparse
+import re
 from json.decoder import JSONDecodeError
 from itertools import repeat
-from typing import final
 from datetime import datetime
 
 REPORT_FILE = "report.json"
@@ -62,28 +62,57 @@ def see_report():
         except JSONDecodeError:
             print("Report file is empty or contains invalid JSON.")
 
+def validate_target(target):
+    try:
+        ip = socket.gethostbyname(target)
+        if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
+            return True
+        else:
+            return False
+    except socket.error:
+        return False
+
+def validate_port_range(port_range):
+    if len(port_range) != 2:
+        return False
+    try:
+        start_port = int(port_range[0])
+        end_port = int(port_range[1])
+        if 1 <= start_port <= 65535 and 1 <= end_port <= 65535 and start_port <= end_port:
+            return True
+        else:
+            return False
+    except ValueError:
+        return False
 
 def scan(target, p_range):
-    print(f"Scanning {target}...\n") 
+    if validate_target(target) and validate_port_range(p_range):
+        target = socket.gethostbyname(target)
+        print(f"Scanning {target}...\n")
 
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        executor.map(port_scanner, range(p_range[0], p_range[1] + 1), repeat(target))
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            executor.map(port_scanner, range(p_range[0], p_range[1] + 1), repeat(target))
 
-    print("\nScanning completed.")
+        print("\nScanning completed.")
 
-    scan_results = []
+        scan_results = []
 
-    while not open_ports.empty():
-        scan_results.append(open_ports.get())
-    final_report = {
-            "target": target,
-            "scan_time": datetime.now().isoformat(),
-            "results": scan_results
-            }
+        while not open_ports.empty():
+            scan_results.append(open_ports.get())
 
-    with open("report.json", "w") as file:
-        json.dump(final_report, file, indent=3)
-    print("Report saved to report.json")
+        duration_seconds = (datetime.now() - datetime.fromisoformat(scan_results[0]["scan_time"])).total_seconds() if scan_results else 0
+        final_report = {
+                "target": target,
+                "scan_time": datetime.now().isoformat(),
+                "duration_seconds": duration_seconds,
+                "results": scan_results
+                }
+
+        with open("report.json", "w") as file:
+            json.dump(final_report, file, indent=3)
+        print("Report saved to report.json")
+    else:
+        print("Please provide a valid IP address or hostname. or Invalid port range. Please provide a valid range between 1 and 65535.")
 
 
 
