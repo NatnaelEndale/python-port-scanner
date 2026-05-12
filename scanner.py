@@ -1,3 +1,4 @@
+from os import NGROUPS_MAX
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
 import socket
@@ -87,6 +88,14 @@ def validate_port_range(port_range):
     except ValueError:
         return False
 
+def summary(p_range, scan_results, duration_seconds):
+    print(f"Scanning ports from {p_range[0]} to {p_range[1]}...")
+    num_open_ports = len(scan_results)
+    print(f"{num_open_ports} open ports found.")
+    print(f"Duration: {duration_seconds:.2f} seconds")
+
+
+
 def scan(target, p_range):
     if validate_target(target) and validate_port_range(p_range):
         target = socket.gethostbyname(target)
@@ -116,6 +125,9 @@ def scan(target, p_range):
         with open(file_name, "w") as file:
             json.dump(final_report, file, indent=3)
         print("Report saved to report.json")
+
+        print("\nScan Summary:")
+        summary(p_range, scan_results, duration_seconds)
     else:
         print("Please provide a valid IP address or hostname. or Invalid port range. Please provide a valid range between 1 and 65535.")
 
