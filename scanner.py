@@ -30,7 +30,11 @@ def port_scanner(port, target):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as scanner: 
         
         scanner.settimeout(0.5)
-        result = scanner.connect_ex((target, port))
+        try:
+            result = scanner.connect_ex((target, port))
+        except socket.error:
+            print(f"Failed to connect to port {port}.")
+            return
         
         if result == 0:
             scanner.settimeout(1.5)
@@ -38,8 +42,9 @@ def port_scanner(port, target):
                 request = "HEAD / HTTP/1.1\r\nHost: {}\r\n\r\n".format(target)
                 try:
                     scanner.send(request.encode())
-                except socket.error:
+                except (socket.error, ConnectionRefusedError, OSError):
                     print(f"Failed to send HTTP request to port {port}.")
+                    return 
             try:
                 banner = scanner.recv(1024).decode(errors="ignore").strip() 
                 service = services.get(port, "Unknown")
@@ -64,11 +69,8 @@ def see_report():
 
 def validate_target(target):
     try:
-        ip = socket.gethostbyname(target)
-        if re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
-            return True
-        else:
-            return False
+        socket.gethostbyname(target)
+        return True
     except socket.error:
         return False
 
@@ -90,6 +92,8 @@ def scan(target, p_range):
         target = socket.gethostbyname(target)
         print(f"Scanning {target}...\n")
 
+        start_time = datetime.now()
+
         with ThreadPoolExecutor(max_workers=10) as executor:
             executor.map(port_scanner, range(p_range[0], p_range[1] + 1), repeat(target))
 
@@ -100,15 +104,16 @@ def scan(target, p_range):
         while not open_ports.empty():
             scan_results.append(open_ports.get())
 
-        duration_seconds = (datetime.now() - datetime.fromisoformat(scan_results[0]["scan_time"])).total_seconds() if scan_results else 0
+        duration_seconds = (datetime.now() - start_time).total_seconds() if scan_results else 0
         final_report = {
                 "target": target,
                 "scan_time": datetime.now().isoformat(),
                 "duration_seconds": duration_seconds,
                 "results": scan_results
                 }
+        file_name = f"scan_{datetime.now().strftime('%Y-%m-%d_%H:%M:%S')}.json"
 
-        with open("report.json", "w") as file:
+        with open(file_name, "w") as file:
             json.dump(final_report, file, indent=3)
         print("Report saved to report.json")
     else:
