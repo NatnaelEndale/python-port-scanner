@@ -1,10 +1,8 @@
-from os import NGROUPS_MAX
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor
 import socket
 import json
 import argparse
-import re
 from json.decoder import JSONDecodeError
 from itertools import repeat
 from datetime import datetime
