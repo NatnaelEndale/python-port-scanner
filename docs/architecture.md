@@ -3,27 +3,27 @@ The scanner performs concurrent TCP connect scans against a target host,
 attempting to identify open ports and gather service banners.
 
 ## The Scanner simply does this
-User CLI Input
-       │
-       ▼
-Argument Parsing (argparse)
-       │
-       ▼
-Validation Layer
-       │
-       ▼
-ThreadPoolExecutor
-       │
-       ▼
-Port Scanner Workers
-       │
-       ▼
-Banner Grabbing & Service Detection
-       │
-       ▼
-Queue Collection
-       │
-       ▼
+User CLI Input<\br>
+       │<\br>
+       ▼<\br>
+Argument Parsing (argparse)<\br>
+       │<\br>
+       ▼<\br>
+Validation Layer<\br>
+       │<\br>
+       ▼<\br>
+ThreadPoolExecutor<\br>
+       │<\br>
+       ▼<\br>
+Port Scanner Workers<\br>
+       │<\br>
+       ▼<\br>
+Banner Grabbing & Service Detection<\br>
+       │<\br>
+       ▼<\br>
+Queue Collection<\br>
+       │<\br>
+       ▼<\br>
 JSON Report Generation
 
 ## CLI Layer 
@@ -38,7 +38,8 @@ Subparsers allow for the creation of multiple subcommands within a single CLI ap
 
 ```python
 parser = argparse.ArgumentParser(description="A Port Scanner.") 
-subparsers = parser.add_subparsers(dest="command", help="Available commands")```
+subparsers = parser.add_subparsers(dest="command", help="Available commands")
+```
 
 ### Command Separation
 The scanner separtes the command `sacn` and `report` into two different subcommands. This allows for a clear distinction between the scanning process and the reporting process, making the tool more organized and easier to use.
@@ -78,7 +79,8 @@ The scanning workflow(Lifecyle) involves several steps:
 1. **Configure timeout**: The scanner sets a timeout for each connection attempt to prevent hanging on unresponsive ports.
 
 ```python
-scanner.settimeout(timeout)```
+scanner.settimeout(timeout)
+```
 
 2. **Attempt TCP connection**: The worker thread attempts to establish a TCP connection to the target host on the specified port.
 
@@ -87,19 +89,21 @@ try:
     result = scanner.connect_ex((target, port))
 except socket.error:
     print(f"Failed to connect to port {port}.")
-    return```
+    return
+    ```
 
 3. **Identify open ports**: If the connection is successful (result == 0), the port is identified as open, and the scanner proceeds to gather service banners.
 ```python
 if result == 0:
     scanner.settimeout(timeout)
-    ...```
+```
 
 4. **Send optional protocol probes**: The scanner may send protocol-specific probes (e.g., HTTP, FTP) to gather more information about the service running on the open port.
 
 ```python
 if port == 80:
-    request = "HEAD / HTTP/1.1\r\nHost: {}\r\n\r\n".format(target)```
+    request = "HEAD / HTTP/1.1\r\nHost: {}\r\n\r\n".format(target)
+```
 
 5. **Receive banner**: The scanner attempts to receive a banner from the open port, which may contain information about the service and its version, stores the info in dictionary and prints the structured output.
 
@@ -138,7 +142,8 @@ scan_results = []
 
     with open(file_name, "w") as file:
         json.dump(final_report, file, indent=3)
-    print("Report saved to report.json")```
+    print("Report saved to report.json")
+```
 
 ## Socket Design
 The scanner uses the `socket` library to perform TCP connections and gather service banners. The Socket design involves creating a socket object for each worker thread, configuring it with a timeout, and using it to attempt connections to the target host on specified ports. The socket is also used to send protocol-specific probes and receive banners from open ports. The socket design allows for efficient handling of network communication, enabling the scanner to perform concurrent scans and gather detailed information about the services running on open ports.
@@ -147,7 +152,8 @@ The scanner uses the `socket` library to perform TCP connections and gather serv
 The scanner uses `AF_INET` to specify that it is working with IPv4 addresses and `SOCK_STREAM` to indicate that it is using TCP for communication. This combination allows the scanner tool to establish reliable connections to the target host and gather information about open ports and services effectively.
 
 ```python
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as scanner:```
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as scanner:
+```
 
 ### TCP sockets
 TCP sockets provide a reliable, connection-oriented communication channel between the scanner and the target host. This allows the scanner to establish a connection, send probes, and receive banners without worrying about packet loss or ordering issues, making it an ideal choice for port scanning and service detection tasks.
@@ -160,14 +166,16 @@ The scanner sets a timeout for each socket operation to prevent hanging on unres
 
 ```python
 scanner.settimeout(0.5)
-scanner.settimeout(1.5)```
+scanner.settimeout(1.5)
+```
 
 ## Banner Grabbing Logic
 The banner grabbing logic is responsible for sending protocol-specific probes to open ports and receiving banners that may contain information about the service and its version. The scanner sends probes based on common ports (e.g., HTTP on port 80) to elicit responses from the services running on those ports. If a banner is received, it is decoded and stored in a structured format for reporting. If no banner is received within the timeout period, the scanner handles this gracefully by indicating that no banner was received while still marking the port as open. This logic allows the scanner to gather valuable information about the services running on open ports, enhancing the overall effectiveness of the scan.
 
 ```python
 try:
-    banner = scanner.recv(1024).decode(errors="ignore").strip()```
+    banner = scanner.recv(1024).decode(errors="ignore").strip()
+```
 
 ### Passive Banners (SSH/Telnet)
 For services like SSH and Telnet, which often provide a banner immediately upon connection, the scanner attempts to receive this banner without sending any probes. If a banner is received, it is decoded and stored. If no banner is received within the timeout period, the scanner handles this case by indicating that no banner was received while still marking the port as open, especially for Telnet where a banner may not always be provided.
@@ -183,9 +191,9 @@ The scanner uses a queue to collect results from worker threads. Each worker thr
 
 ```python
 open_ports = Queue()
-...
+#...
 open_ports.put({"port": port, "service": service, "banner": banner})
-...```
+```
 
 ### thread-safe communication
 Using a queue for result collection ensures thread-safe communication between worker threads and the main thread. The `Queue` class from the `queue` module provides built-in synchronization mechanisms that allow multiple threads to safely add and retrieve items without the risk of data corruption or race conditions. This allows the scanner to efficiently collect results from concurrent worker threads while maintaining the integrity of the data and ensuring that the final report accurately reflects the scan results.
