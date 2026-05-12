@@ -49,14 +49,14 @@ def port_scanner(port, target):
             try:
                 banner = scanner.recv(1024).decode(errors="ignore").strip() 
                 service = services.get(port, "Unknown")
-                print(f"Port {port} is open, Service: {service}, Banner: {banner}")
+                print(f"{port:<8}{service:<12}{'Open':<10}{banner}")
                 open_ports.put({"port": port, "service": service, "banner": banner})
             except socket.timeout:
                 if port == 23:  
-                    print(f"Port {port} is open, Telnet service detected, but no banner was received.")
+                    print(f"{port:<8}{'Telnet':<12}{'Open':<10}{'No banner was received'}")
                     open_ports.put({"port": port, "service": "Telnet", "banner": None})
                 else:
-                    print(f"Port {port} is open, but no banner was received.")
+                    print(f"{port:<8}{'Unknown':<10}{'Open':<10}{'No banner was received'}")
                     open_ports.put({"port": port, "service": "Unknown", "banner": None})
 
 
@@ -100,6 +100,8 @@ def scan(target, p_range):
     if validate_target(target) and validate_port_range(p_range):
         target = socket.gethostbyname(target)
         print(f"Scanning {target}...\n")
+        print(f"\n\n{'PORT':<8}{'SERVICE':<12}{'STATUS':<10}{'BANNER':<30}")
+        print("-" * 60)
 
         start_time = datetime.now()
 
@@ -160,11 +162,4 @@ if __name__ == "__main__":
 
    
 
-   # what does the port 23 and 22 do?
-   # Port 22 is used for SSH (Secure Shell) which allows secure remote login and command execution on a remote machine. Port 23 is used for Telnet, which is an older protocol for remote login and command execution, but it is not secure and is generally not recommended for used due to security vulnerabilities.
-
-# why we use the with keyword here?
-         # The with keyword is used to create a context manager that automatically handles the setup and teardown of resources. In this case, it ensures that the socket is properly closed after the block of code is executed, even if an error occurs. This helps prevent resource leaks and ensures that the socket is released back to the system when it's no longer needed.
-    # what does this line do?
-         # This line attempts to receive data from the socket after a successful connection. It reads up to 1024 bytes of data, decodes it from bytes to a string, and then removes any leading or trailing whitespace. This is often used to capture the banner information from a service running often on the open port, which can provide information about the service and its version.    
 
