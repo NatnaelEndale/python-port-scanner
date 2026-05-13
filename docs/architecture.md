@@ -3,27 +3,27 @@ The scanner performs concurrent TCP connect scans against a target host,
 attempting to identify open ports and gather service banners.
 
 ## The Scanner simply does this
-User CLI Input<\br>
-       │<br>
-       ▼<br>
-Argument Parsing (argparse)<\br>
-       │<br>
-       ▼<br>
-Validation Layer<\br>
-       │<br>
-       ▼<br>
-ThreadPoolExecutor<\br>
-       │<br>
-       ▼<br>
-Port Scanner Workers<\br>
-       │<br>
-       ▼<br>
-Banner Grabbing & Service Detection<\br>
-       │<br>
-       ▼<br>
-Queue Collection<\br>
-       │<br>
-       ▼<br>
+User CLI Input<br>
+        │<br>
+        ▼<br>
+Argument Parsing (argparse)<br>
+        │<br>
+        ▼<br>
+Validation Layer<br>
+        │<br> 
+        ▼<br>
+ThreadPoolExecutor<br>
+        │<br>
+        ▼<br>
+Port Scanner Workers<br>
+        │<br>
+        ▼<br>
+Banner Grabbing & Service Detection<br>
+        │<br>
+        ▼<br>
+Queue Collection<br>
+        │<br>
+        ▼<br>
 JSON Report Generation
 
 ## CLI Layer 
