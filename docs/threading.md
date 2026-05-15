@@ -151,6 +151,6 @@ Threading can significantly improve the performance of network scanning by allow
 
 While threading can improve performance, it can also introduce complexity in terms of debugging and synchronization. When multiple threads are accessing shared resources, such as a queue for storing results, there is a risk of race conditions and other synchronization issues that can lead to inconsistent results. Additionally, the results from worker threads may not be returned in the order they were submitted, which can make it more difficult to correlate results with specific tasks. Debugging issues in a multithreaded environment can also be more challenging due to the concurrent nature of thread execution.
 
-`** Finally, while threading can provide significant performance benefits for I/O-bound tasks like network scanning, it is important to carefully consider the trade-offs and potential issues that can arise when using threads in your application. Proper synchronization and error handling are crucial to ensure that your multithreaded code runs correctly and efficiently.**`
+**`Finally, while threading can provide significant performance benefits for I/O-bound tasks like network scanning, it is important to carefully consider the trade-offs and potential issues that can arise when using threads in your application. Proper synchronization and error handling are crucial to ensure that your multithreaded code runs correctly and efficiently.`**
 
 
