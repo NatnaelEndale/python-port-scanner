@@ -124,10 +124,11 @@ def scan(target, p_range):
 
         with open(file_name, "w") as file:
             json.dump(final_report, file, indent=3)
-        print("Report saved to report.json")
+        print(f"Report saved to {file_name}")
 
         print("\nScan Summary:")
         summary(p_range, scan_results, duration_seconds)
+        return final_report
     else:
         print("Please provide a valid IP address or hostname. or Invalid port range. Please provide a valid range between 1 and 65535.")
 
